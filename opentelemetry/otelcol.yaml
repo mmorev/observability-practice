@@ -1,0 +1,72 @@
+---
+# RECEIVERS (inputs)
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${MY_POD_IP}:4317
+
+# PROCESSORS
+processors:
+  resource:
+    attributes:
+      - action: insert
+        key: loki.resource.labels
+        value: service.name
+  spanmetrics:
+    metrics_exporter: prometheusremotewrite # важно!
+    latency_histogram_buckets: [50ms, 100ms, 150ms, 200ms, 250ms, 300ms, 350ms, 400ms, 450ms, 500ms]
+    dimensions:
+      - name: span.name
+      - name: http.method
+      - name: http.route
+      - name: http.status_code
+    dimensions_cache_size: 1000
+
+# EXPORTERS (output)
+exporters:
+  logging:
+    verbosity: detailed
+  loki:
+    endpoint: http://loki.loki:3100/loki/api/v1/push
+    tls:
+      insecure: true
+  otlp/tempo:
+    endpoint: http://tempo.tempo:4317
+    tls:
+      insecure: true
+  prometheusremotewrite/mimir:
+    endpoint: http://mimir-distributor.mimir:8080/api
+  prometheusremotewrite:
+    endpoint: http://prometheus-server.prometheus:909
+
+# EXTENSIONS
+extensions:
+  health_check:
+    endpoint: ${MY_POD_IP}:13133
+
+# MAIN CONFIG
+service:
+  extensions:
+    - health_check
+  pipelines:
+    logs:
+      receivers:
+      - otlp
+      processors:
+      - resource
+      exporters:
+      - loki
+    metrics:
+      receivers:
+      - otlp
+      exporters:
+      # - prometheusremotewrite/mimir
+      - prometheusremotewrite
+    traces:
+      receivers:
+      - otlp
+      processors:
+      - spanmetrics
+      exporters:
+      - otlp/tempo

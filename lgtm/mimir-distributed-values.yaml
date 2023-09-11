@@ -1,0 +1,28 @@
+compactor:
+  extraArgs: {auth.multitenancy-enabled: false}
+distributor:
+  extraArgs: {auth.multitenancy-enabled: false}
+ruler:
+  extraArgs: {auth.multitenancy-enabled: false}
+query_frontend:
+  extraArgs: {auth.multitenancy-enabled: false}
+querier:
+  replicas: 1
+  extraArgs: {auth.multitenancy-enabled: false}
+ingester:
+  replicas: 1
+  extraArgs: {auth.multitenancy-enabled: false}
+  zoneAwareReplication: {enabled: false}
+store_gateway:
+  replicas: 1
+  extraArgs: {auth.multitenancy-enabled: false}
+  zoneAwareReplication: {enabled: false}
+
+mimir:
+  structuredConfig:
+    limits.max_global_exemplars_per_user: 100000
+
+alertmanager:       {enabled: false}
+overrides_exporter: {enabled: false}
+query_scheduler:    {enabled: false}
+rollout_operator:   {enabled: false}

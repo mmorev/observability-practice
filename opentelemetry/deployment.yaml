@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: opentelemetry
+  name: otelcol
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: otelcol}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: otelcol}
+    spec:
+      containers:
+        - name: opentelemetry-collector
+          image: "otel/opentelemetry-collector-contrib:0.82.0"
+          command:
+            - /otelcol-contrib
+            - --config=/config/otelcol.yaml
+          ports:
+            - name: otlp
+              containerPort: 4317
+              protocol: TCP
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet: {path: /, port: 13133}
+          readinessProbe:
+            httpGet: {path: /, port: 13133}
+          resources:
+            limits: {memory: 125Mi, cpu: 100m}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: otelcol

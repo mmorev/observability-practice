@@ -1,0 +1,22 @@
+singleBinary: {replicas: 1}
+backend:      {replicas: 0}
+read:         {replicas: 0}
+write:        {replicas: 0}
+gateway:      {enabled: false}
+test:         {enabled: false}
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+# ingress:
+#   annotations: {cert-manager.io/cluster-issuer: minikube-ca}
+#   hosts: [loki.kube]
+#   tls: [{hosts: [loki.kube], secretName: loki-cert}]
+monitoring:
+  dashboards:     {enabled: false}
+  lokiCanary:     {enabled: false}
+  rules:          {enabled: false, alerting: false}
+  selfMonitoring: {enabled: false, grafanaAgent: {installOperator: false}}
+  serviceMonitor: {enabled: false}

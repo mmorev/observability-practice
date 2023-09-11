@@ -1,0 +1,9 @@
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: minikube-ca
+  hosts: [grafana.kube]
+  # tls: [{hosts: [grafana.kube], secretName: grafana-cert}]
+persistence:
+  type: pvc
+  enabled: true

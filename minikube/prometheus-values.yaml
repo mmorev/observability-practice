@@ -1,0 +1,15 @@
+alertmanager:             {enabled: false}
+kube-state-metrics:       {enabled: false}
+prometheus-node-exporter: {enabled: false}
+prometheus-pushgateway:   {enabled: false}
+server:
+  service:
+    servicePort: 9090
+  extraFlags:
+    - web.enable-lifecycle
+    - enable-feature=exemplar-storage
+  ingress:
+    annotations: {cert-manager.io/cluster-issuer: minikube-ca}
+    hosts: [prometheus.kube]
+    # tls: [{hosts: [prometheus.kube], secretName: prometheus-server-cert}]
+      

@@ -1,0 +1,35 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  namespace: cert-manager
+  name: minikube-root
+spec:
+  selfSigned: {}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: cert-manager
+  name: minikube-ca
+spec:
+  isCA: true
+  commonName: minikube-ca
+  secretName: minikube-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: minikube-root
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: minikube-ca
+spec:
+  ca:
+    secretName: minikube-ca-secret
