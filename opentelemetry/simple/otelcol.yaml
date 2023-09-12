@@ -35,8 +35,6 @@ exporters:
     endpoint: http://tempo.tempo:4317
     tls:
       insecure: true
-  prometheusremotewrite/mimir:
-    endpoint: http://mimir-distributor.mimir:8080/api
   prometheusremotewrite:
     endpoint: http://prometheus-server.prometheus:909
 
@@ -61,7 +59,6 @@ service:
       receivers:
       - otlp
       exporters:
-      # - prometheusremotewrite/mimir
       - prometheusremotewrite
     traces:
       receivers:
