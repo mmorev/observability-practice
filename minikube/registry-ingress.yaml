@@ -5,7 +5,7 @@ metadata:
   name: registry
 spec:
   rules:
-    - host: registry.kube
+    - host: registry.test
       http:
         paths:
           - path: /
