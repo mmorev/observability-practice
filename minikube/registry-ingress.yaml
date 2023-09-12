@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: kube-system
+  name: registry
+spec:
+  rules:
+    - host: registry.kube
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: registry
+                port:
+                  number: 80
