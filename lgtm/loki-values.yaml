@@ -12,8 +12,8 @@ loki:
     type: filesystem
 # ingress:
 #   annotations: {cert-manager.io/cluster-issuer: minikube-ca}
-#   hosts: [loki.test
-#   tls: [{hosts: [loki.test, secretName: loki-cert}]
+#   hosts: [loki.test]
+#   tls: [{hosts: [loki.test], secretName: loki-cert}]
 monitoring:
   dashboards:     {enabled: false}
   lokiCanary:     {enabled: false}
