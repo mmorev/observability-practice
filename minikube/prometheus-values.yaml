@@ -10,6 +10,5 @@ server:
     - enable-feature=exemplar-storage
   ingress:
     annotations: {cert-manager.io/cluster-issuer: minikube-ca}
-    hosts: [prometheus.kube]
-    # tls: [{hosts: [prometheus.kube], secretName: prometheus-server-cert}]
-      
+    hosts: [prometheus.test]
+    # tls: [{hosts: [prometheus.test], secretName: prometheus-server-cert}]
