@@ -1,4 +1,4 @@
-fullnameOverride: "prometheus"
+fullnameOverride: "promstack"
 cleanPrometheusOperatorObjectNames: true
 grafana:
   namespaceOverride: grafana
@@ -11,10 +11,9 @@ grafana:
     tls: [{hosts: [grafana.test], secretName: grafana-cert}]
   sidecar:
     dashboards: {enabled: false}
-    datasources:
-      exemplarTraceIdDestinations:
-        datasourceUid: tempo
-        traceIdLabelName: trace_id
+    datasources: 
+      enabled: true
+      defaultDatasourceEnabled: false
 
   additionalDataSources:
   - name: Tempo
@@ -44,11 +43,19 @@ grafana:
           matcherRegex: '"traceid":"(\w+)"'
           name: TraceID
           url: '${__value.raw}'
-
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    url: http://promstack-prometheus.prometheus:9090
+    jsonData:
+      prometheusType: Prometheus
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: trace_id
 prometheus:
   prometheusSpec:
     additionalArgs:
-      - name: --enable-feature
+      - name: enable-feature
         value: exemplar-storage
 
 prometheus-node-exporter:
