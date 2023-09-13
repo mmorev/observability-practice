@@ -3,5 +3,6 @@ persistence:
 ingress:
   enabled: true
   hosts: [registry.test]
+  tls: [{hosts: [registry.test], secretName: prometheus-server-cert}]
 secrets:
   htpasswd: admin:$2y$05$QMQbBAS4UzM2wHF6r4mtq.IzO.mNjHmG9cE8NEPCrJE2Wp0W86p1G
