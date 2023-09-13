@@ -105,18 +105,9 @@ https://github.com/MuhammedKalkan/OpenLens/releases
 3.2 OpenLens - pod tools
 File - Extensions - @alebcay/openlens-node-pod-menu
 
-3.3 OpenLens - add kubeconfig
-Get-Content $HOME\.kube\config | Set-Clipboard
-(+) Add from kubeconfig
-Catalog - Minikube - Pin
-
-3.4 OpenLens - Prometheus
-Minikube - Settings - Metrics
-- Prometheus operator
-  prometheus/prometheus-server:9090
-
 -------------------
 function hui {& helm upgrade --install $args}
+alias hui='helm upgrade --install'
 
 1.7 Minikube CA
 hui cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true
@@ -125,6 +116,9 @@ kubectl apply -f .\minikube\minikube-cert-manager.yaml
 1.8 Minikube Registry
 hui registry twuni/docker-registry -n kube-system --values .\minikube\registry-ingress.yaml
 
+kubectl create secret docker-registry registry-auth --docker-server=registry.test --docker-username=admin --docker-password=admin
+
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registry-auth"}]}'
 
 -------------------
 | 5. LGTM         |
@@ -137,6 +131,9 @@ hui registry twuni/docker-registry -n kube-system --values .\minikube\registry-i
 # MIMIR
 # hui mimir-distributed grafana/mimir-distributed --values .\lgtm\mimir-distributed-values.yaml -n mimir --create-namespace
 ----- END ------
+
+kubectl create ns prometheus
+kubectl create ns grafana
 
 hui prometheus prometheus/kube-prometheus-stack -n prometheus --values .\lgtm\prom-stack-values.yaml
 hui loki grafana/loki --namespace grafana --values .\lgtm\loki-values.yaml
@@ -179,6 +176,7 @@ kubectl -n opentelemetry delete configmap otelcol
 hui opentelemetry-operator opentelemetry/opentelemetry-operator -n opentelemetry --create-namespace --values .\opentelemetry\operator\operator-values.yaml
 
 kubectl apply -f .\opentelemetry\operator\collector-crd.yaml -n opentelemetry
+kubectl apply -f .\opentelemetry\operator\instrumentation-crd.yaml -n opentelemetry
 
 -----------------------
 | 6. Spring Javaagent |

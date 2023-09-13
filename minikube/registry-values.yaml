@@ -1,8 +1,12 @@
+fullnameOverride: registry
 persistence:
   enabled: true
 ingress:
   enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: minikube-ca
+    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
   hosts: [registry.test]
-  tls: [{hosts: [registry.test], secretName: prometheus-server-cert}]
+  tls: [{hosts: [registry.test], secretName: registry-cert}]
 secrets:
   htpasswd: admin:$2y$05$QMQbBAS4UzM2wHF6r4mtq.IzO.mNjHmG9cE8NEPCrJE2Wp0W86p1G

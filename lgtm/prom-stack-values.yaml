@@ -25,8 +25,24 @@ grafana:
         datasourceUid: 'loki'
         spanStartTimeShift: '1h'
         spanEndTimeShift: '-1h'
+        tags: [{key: "service_name", value: "service_name"}]
         customQuery: true
-        query: '{$${__tags}} |= `"traceid":"$${__trace.traceId}"`'
+        query: '{$${__tags}} |= `"traceid":"$${__trace.traceId}"` | json'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        queries:
+        - name: 95% Latency
+          query: >
+            histogram_quantile(0.95, sum(rate(latency_bucket{$$__tags}[$$__rate_interval])) by (le, operation))
+        - name: RPS
+          query: sum(rate(latency_count{$$__tags}[$$__rate_interval])) by (operation)
+        spanEndTimeShift: -1h
+        spanStartTimeShift: 1h
+        tags:
+        - key: service.name
+          value: service_name
+        - key: span.name
+          value: operation
       serviceMap:
         datasourceUid: 'prometheus'
       lokiSearch:
@@ -42,7 +58,7 @@ grafana:
         - datasourceUid: tempo
           matcherRegex: '"traceid":"(\w+)"'
           name: TraceID
-          url: '${__value.raw}'
+          url: '$${__value.raw}'
   - name: Prometheus
     uid: prometheus
     type: prometheus
@@ -54,6 +70,14 @@ grafana:
           name: trace_id
 prometheus:
   prometheusSpec:
+    enableRemoteWriteReceiver: true
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 10Gi
     additionalArgs:
       - name: enable-feature
         value: exemplar-storage

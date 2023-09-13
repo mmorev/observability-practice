@@ -2,6 +2,7 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: default
+  namespace: opentelemetry
 spec:
   mode: deployment
   ports:
@@ -24,6 +25,11 @@ spec:
           - action: insert
             key: loki.resource.labels
             value: service.name
+      transform/span_name:
+        trace_statements:
+          - context: span
+            statements:
+              - set(attributes["span.name"], name)      
       spanmetrics:
         metrics_exporter: prometheusremotewrite # важно!
         latency_histogram_buckets: [50ms, 100ms, 150ms, 200ms, 250ms, 300ms, 350ms, 400ms, 450ms, 500ms]
@@ -47,7 +53,7 @@ spec:
         tls:
           insecure: true
       prometheusremotewrite:
-        endpoint: http://prometheus-server.prometheus:9090
+        endpoint: http://promstack-prometheus.prometheus:9090
 
     # EXTENSIONS
     extensions:
@@ -75,6 +81,7 @@ spec:
           receivers:
           - otlp
           processors:
+          - transform/span_name
           - spanmetrics
           exporters:
           - otlp/tempo

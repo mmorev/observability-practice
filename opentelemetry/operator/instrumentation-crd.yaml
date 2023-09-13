@@ -1,0 +1,16 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: default
+  namespace: opentelemetry
+spec:
+  exporter:
+    endpoint: http://default-collector.opentelemetry:4317
+  java:
+    env:
+    - name: OTEL_LOGS_EXPORTER
+      value: otlp
+    - name: OTEL_SERVICE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.containers[0].name

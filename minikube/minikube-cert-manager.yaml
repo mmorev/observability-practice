@@ -22,7 +22,7 @@ spec:
     size: 256
   issuerRef:
     name: minikube-root
-    kind: ClusterIssuer
+    kind: Issuer
     group: cert-manager.io
 
 ---
