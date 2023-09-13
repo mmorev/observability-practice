@@ -1,0 +1,55 @@
+fullnameOverride: "prometheus"
+cleanPrometheusOperatorObjectNames: true
+grafana:
+  namespaceOverride: grafana
+  defaultDashboardsEnabled: false
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: minikube-ca
+    hosts: [grafana.test]
+    tls: [{hosts: [grafana.test], secretName: grafana-cert}]
+  sidecar:
+    dashboards: {enabled: false}
+    datasources:
+      exemplarTraceIdDestinations:
+        datasourceUid: tempo
+        traceIdLabelName: trace_id
+
+  additionalDataSources:
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    url: http://tempo.grafana:3100
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'loki'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        customQuery: true
+        query: '{$${__tags}} |= `"traceid":"$${__trace.traceId}"`'
+      serviceMap:
+        datasourceUid: 'prometheus'
+      lokiSearch:
+        datasourceUid: 'loki'
+      nodeGraph:
+        enabled: true
+  - name: Loki
+    uid: loki
+    type: loki
+    url: http://loki.grafana:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"traceid":"(\w+)"'
+          name: TraceID
+          url: '${__value.raw}'
+
+prometheus:
+  prometheusSpec:
+    additionalArgs:
+      - name: --enable-feature
+        value: exemplar-storage
+
+prometheus-node-exporter:
+  namespaceOverride: kube-system
