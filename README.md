@@ -1,3 +1,6 @@
+## Контакты
+Телега: http://t.me/mmorev
+
 # Install tools
 
 ## Git, Minikube, Docker
@@ -52,7 +55,7 @@ minikube start \
 --addons=ingress-dns \
 --insecure-registry "192.168.0.0/16" \
 --memory=4g \
---cpus=max
+--cpus=2
 ```
 
 ## OpenLens
@@ -139,7 +142,7 @@ hui prometheus prometheus/kube-prometheus-stack -n prometheus --values ./lgtm/pr
 
 Резолвим адрес
 ```bash
-echo $(minikube ip) registry.test | sudo tee -a /etc/hosts
+echo $(minikube ip) grafana.test | sudo tee -a /etc/hosts
 ```
 
 Loki
