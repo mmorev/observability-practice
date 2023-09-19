@@ -45,7 +45,14 @@ helm repo add opentelemetry https://open-telemetry.github.io/opentelemetry-helm-
 
 ## Minikube
 ```bash 
-minikube start --driver=docker --addons=default-storageclass --addons=ingress --addons=ingress-dns --memory=4g --cpus=max
+minikube start \
+--driver=docker \
+--addons=default-storageclass \
+--addons=ingress \
+--addons=ingress-dns \
+--insecure-registry "192.168.0.0/16" \
+--memory=4g \
+--cpus=max
 ```
 
 ## OpenLens
@@ -85,9 +92,26 @@ kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registr
 echo $(minikube ip) registry.test | sudo tee -a /etc/hosts
 ```
 
-Логинимся в регистри
+Добавляем в доверенные локально
+#### /etc/docker/daemon.json:
+```json
+{
+  "insecure-registries" : ["registry.test"]
+}
+```
+
+Добавляем в доверенные в minikube, если вдруг забыли параметр к `minikube start`
+```bash
+mkdir -p $HOME/.minikube/certs
+kubectl -n cert-manager get secret minikube-ca-secret -o jsonpath="{.data.ca\.crt}" | base64 -d > $HOME/.minikube/certs/minikube-ca-cert.pem
+minikube stop
+minikube start --embed-certs
+```
+
+рестартим Docker и логинимся в регистри. Учтите, что minikube тоже перезапустится.
 
 ```bash
+sudo systemctl restart docker
 docker login registry.test -u admin -p admin
 ```
 
@@ -195,29 +219,113 @@ kubectl get secret --namespace grafana prometheus-grafana -o jsonpath="{.data.ad
 
 # Opentelemetry
 
-```kubectl create ns opentelemetry```
+```bash
+kubectl create ns opentelemetry
+```
 
 ## Simple install
-```
+```bash
 kubectl -n opentelemetry create configmap otelcol --from-file ./opentelemetry/simple/otelcol.yaml
 kubectl -n opentelemetry apply -f ./opentelemetry/simple/deployment.yaml -f ./opentelemetry/simple/service.yaml
 ```
 
-### Undo changes
-```
+#### Undo changes
+```bash
 kubectl -n opentelemetry delete service otelcol
 kubectl -n opentelemetry delete deployment otelcol
 kubectl -n opentelemetry delete configmap otelcol
 ```
 
 ## Advanced install
-```
+```bash
 hui opentelemetry-operator opentelemetry/opentelemetry-operator -n opentelemetry --create-namespace --values ./opentelemetry/operator/operator-values.yaml
+```
 
+ждем пару минут, пока поднимутся вебхуки, иначе будет ошибка
+```bash
 kubectl apply -f ./opentelemetry/operator/collector-crd.yaml -n opentelemetry
 kubectl apply -f ./opentelemetry/operator/instrumentation-crd.yaml -n opentelemetry
 ```
 
-# Spring Javaagent example
+# Spring Javaagent examples
 
-cd 
+Install JDK versions
+```bash
+apt install -y openjdk-8-jdk openjdk-11-jdk openjdk-17-jdk
+```
+
+## Simple app example
+
+```bash
+cd opentelemetry-java-examples/javaagent
+```
+#### Build app
+```bash
+../gradlew bootJar
+docker build -t registry.test/javaagent-simple .
+docker push registry.test/javaagent-simple
+```
+
+#### Run!
+```bash
+kubectl run javaagent-simple \
+--image registry.test/javaagent-simple:latest \
+--env OTEL_SERVICE_NAME="agent-example-app" \
+--env OTEL_LOGS_EXPORTER=otlp \
+--env OTEL_EXPORTER_OTLP_ENDPOINT=http://default-collector.opentelemetry:4317 \
+--port 8080
+```
+
+#### Build app w/o javaagent
+```bash
+../gradlew bootJar
+docker build -t registry.test/javaagent-simple-auto .
+docker push registry.test/javaagent-simple-auto
+```
+
+#### Run!
+```bash
+kubectl run javaagent-simple-auto \
+--image registry.test/javaagent-simple-auto:latest \
+--annotations "instrumentation.opentelemetry.io/inject-java=opentelemetry/default" \
+--port 8080
+```
+
+## Complex app example
+#### BUILD
+```bash
+sudo apt install -y maven
+
+cd -
+cd tutorials/spring-cloud-modules/spring-cloud-open-telemetry/
+
+mvn package
+
+docker build -t registry.test/product-service spring-cloud-open-telemetry1
+docker push registry.test/product-service
+
+docker build -t registry.test/price-service spring-cloud-open-telemetry2
+docker push registry.test/price-service
+
+```
+
+#### RUN
+```bash
+kubectl run price-service \
+--image registry.test/price-service:latest \
+--port 8081
+kubectl run product-service \
+--image registry.test/product-service:latest \
+--port 8080
+
+kubectl expose pod price-service --port 8081
+kubectl expose pod product-service --port 8080
+```
+
+#### Expose ingress
+```bash
+
+kubectl create ingress products --rule="products-service.test/=product-service:8080,tls=products-service-cert"
+
+echo $(minikube ip) product-service.test | sudo tee -a /etc/hosts
+```

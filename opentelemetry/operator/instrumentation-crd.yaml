@@ -13,4 +13,4 @@ spec:
     - name: OTEL_SERVICE_NAME
       valueFrom:
         fieldRef:
-          fieldPath: spec.containers[0].name
+          fieldPath: metadata.name

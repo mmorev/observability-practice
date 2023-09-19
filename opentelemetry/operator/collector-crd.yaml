@@ -53,7 +53,7 @@ spec:
         tls:
           insecure: true
       prometheusremotewrite:
-        endpoint: http://promstack-prometheus.prometheus:9090
+        endpoint: http://promstack-prometheus.prometheus:9090/api/v1/write
 
     # EXTENSIONS
     extensions:
