@@ -166,6 +166,8 @@ kubectl get secret --namespace grafana prometheus-grafana -o jsonpath="{.data.ad
 
 # Grafana - Provision Datasources
 
+**Grafana Provisioning docs:** https://grafana.com/docs/grafana/latest/administration/provisioning/
+
 ``` yaml
   additionalDataSources:
   - name: Tempo
